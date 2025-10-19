@@ -17,7 +17,7 @@ export class TasksController {
   @ApiOperation({ summary: 'Créer une nouvelle tâche' })
   @ApiBody({ type: CreateTaskDto })
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
+  async create(@Body() createTaskDto: CreateTaskDto) {
     // Appelle le service pour créer une tâche
     return this.tasksService.create(createTaskDto);
   }
@@ -36,7 +36,7 @@ export class TasksController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     // Appelle le service pour obtenir une tâche spécifique
-    return this.tasksService.findOne(+id);
+    return this.tasksService.findOne(id);
   }
 
   // Endpoint pour mettre à jour une tâche par son ID
@@ -46,7 +46,7 @@ export class TasksController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
     // Appelle le service pour mettre à jour une tâche
-    return this.tasksService.update(+id, updateTaskDto);
+    return this.tasksService.update(id, updateTaskDto);
   }
 
   // Endpoint pour supprimer une tâche par son ID
@@ -55,6 +55,6 @@ export class TasksController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     // Appelle le service pour supprimer une tâche
-    return this.tasksService.remove(+id);
+    return this.tasksService.remove(id);
   }
 }

@@ -1,18 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column } from 'typeorm';
 
 // Ce fichier définit l'entité Task pour TypeORM.
 // Il représente une tâche dans la base de données.
 @Entity()
 export class Task {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  title: string;
+  name: string;
 
   @Column({ nullable: true })
   description?: string;
 
   @Column({ default: false })
-  completed: boolean;
+  is_done: boolean;
 }

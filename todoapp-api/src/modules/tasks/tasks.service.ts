@@ -1,62 +1,48 @@
 // Importation des modules nécessaires de NestJS
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { Task } from './entities/task.entity';
 
-// Définir une interface pour représenter une tâche
-export interface Task {
-  id: number;
-  name: string;
-  description: string;
-  is_done: boolean;
-}
-
-// Ce fichier contient le service pour les tâches.
-// Il gère la logique métier et les données en mémoire.
 @Injectable()
 export class TasksService {
-  // Stockage temporaire des tâches en mémoire
-  private tasks: Task[] = [];
-  private nextId = 1;
+  constructor(
+    @InjectRepository(Task)
+    private readonly tasksRepository: Repository<Task>,
+  ) {}
 
-  // Méthode pour créer une nouvelle tâche
-  create(createTaskDto: CreateTaskDto): Task {
-    const newTask: Task = {
-      id: this.nextId++,
+  async create(createTaskDto: CreateTaskDto): Promise<Task> {
+    const task = this.tasksRepository.create({
       ...createTaskDto,
-      is_done: false, // Par défaut, une nouvelle tâche n'est pas terminée
-    };
-    this.tasks.push(newTask);
-    return newTask;
+      is_done: false,
+    } as Partial<Task>);
+    return this.tasksRepository.save(task);
   }
 
-  // Méthode pour récupérer toutes les tâches
-  findAll(): Task[] {
-    return this.tasks;
+  findAll(): Promise<Task[]> {
+    return this.tasksRepository.find();
   }
 
-  // Méthode pour récupérer une tâche spécifique par son ID
-  findOne(id: number): Task {
-    const task = this.tasks.find((task) => task.id === id);
+  async findOne(id: string): Promise<Task> {
+    const task = await this.tasksRepository.findOneBy({ id });
     if (!task) {
       throw new NotFoundException(`Tâche avec l'ID ${id} non trouvée`);
     }
     return task;
   }
 
-  // Méthode pour mettre à jour une tâche existante
-  update(id: number, updateTaskDto: UpdateTaskDto): Task {
-    const task = this.findOne(id);
-    Object.assign(task, updateTaskDto); // Met à jour les propriétés de la tâche
-    return task;
+  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    const task = await this.findOne(id);
+    Object.assign(task, updateTaskDto);
+    return this.tasksRepository.save(task);
   }
 
-  // Méthode pour supprimer une tâche par son ID
-  remove(id: number): void {
-    const index = this.tasks.findIndex((task) => task.id === id);
-    if (index === -1) {
+  async remove(id: string): Promise<void> {
+    const result = await this.tasksRepository.delete(id);
+    if (result.affected === 0) {
       throw new NotFoundException(`Tâche avec l'ID ${id} non trouvée`);
     }
-    this.tasks.splice(index, 1); // Supprime la tâche du tableau
   }
 }
