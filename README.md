@@ -9,10 +9,28 @@ Avant de commencer, assurez-vous d'avoir les technologies suivantes installées 
 - Node.js (version 18 ou supérieure)
 - npm (généralement inclus avec Node.js)
 - SQLite (pour la base de données)
+- Un navigateur moderne (Chrome, Firefox, Edge, etc.) pour tester l'interface utilisateur
 
 ## Installation
 
-### Backend (API)
+### Cloner le projet
+
+Commencez par cloner le dépôt Git :
+```bash
+git clone https://github.com/CamilleTouron/todoapp.git
+cd todoapp
+```
+
+### Installation et démarrage avec le script
+
+Pour une installation rapide, utilisez le script fourni :
+```bash
+./start-app.sh
+```
+
+### Installation manuelle
+
+#### Backend (API)
 
 1. Accédez au répertoire de l'API :
    ```bash
@@ -39,7 +57,7 @@ Avant de commencer, assurez-vous d'avoir les technologies suivantes installées 
 5. L'API sera disponible à l'adresse suivante :
    [http://localhost:3000](http://localhost:3000)
 
-### Frontend (UI)
+#### Frontend (UI)
 
 1. Accédez au répertoire du frontend :
    ```bash
@@ -77,23 +95,3 @@ Une documentation interactive pour l'API est disponible à l'adresse suivante :
   - Interface utilisateur moderne et réactive
   - Formulaires pour ajouter et modifier des tâches
   - Affichage des tâches avec pagination
-
-## Contribution
-
-1. Forkez le projet.
-2. Créez une nouvelle branche :
-   ```bash
-   git checkout -b ma-nouvelle-fonctionnalite
-   ```
-3. Faites vos modifications et committez-les :
-   ```bash
-   git commit -m "Ajout d'une nouvelle fonctionnalité"
-   ```
-4. Poussez vos modifications :
-   ```bash
-   git push origin ma-nouvelle-fonctionnalite
-   ```
-5. Ouvrez une Pull Request.
-
-## Licence
-Ce projet est sous licence MIT.
