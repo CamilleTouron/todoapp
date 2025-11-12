@@ -53,13 +53,8 @@ export class TasksService {
     const now = Date.now();
     const cached = this.cache.get(key);
 
-    if (cached) {
-      if (cached.value && cached.expiresAt > now) {
-        return cached.value;
-      }
-      if (cached.promise) {
-        return cached.promise;
-      }
+    if (cached && cached.value && cached.expiresAt > now) {
+      return cached.value;
     }
 
     const loadPromise = (async () => {
