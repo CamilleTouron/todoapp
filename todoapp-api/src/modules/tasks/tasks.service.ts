@@ -14,10 +14,19 @@ export type ApiTask = {
   is_done: boolean;
 };
 
+type CacheEntry = {
+  value?: { items: ApiTask[]; total: number; page: number; perPage: number };
+  expiresAt: number;
+  promise?: Promise<{ items: ApiTask[]; total: number; page: number; perPage: number }>;
+};
+
 // Ce fichier contient le service pour les tâches.
 // Il gère la logique métier et les données en mémoire.
 @Injectable()
 export class TasksService {
+  private cache = new Map<string, CacheEntry>();
+  private readonly TTL_MS = 15 * 1000; // 15 seconds simple TTL
+
   constructor(
     @InjectRepository(TaskEntity)
     private readonly repository: Repository<TaskEntity>,
@@ -31,6 +40,7 @@ export class TasksService {
       completed: false,
     });
     const saved = await this.repository.save(entity);
+    this.invalidateCache();
     return this.toApiTask(saved);
   }
 
@@ -39,13 +49,33 @@ export class TasksService {
     page = 1,
     perPage = 3,
   ): Promise<{ items: ApiTask[]; total: number; page: number; perPage: number }> {
-    const [entities, total] = await this.repository.findAndCount({
-      order: { id: 'DESC' },
-      skip: (page - 1) * perPage,
-      take: perPage,
-    });
-    const items = entities.map((e) => this.toApiTask(e));
-    return { items, total, page, perPage };
+    const key = `${page}:${perPage}`;
+    const now = Date.now();
+    const cached = this.cache.get(key);
+
+    if (cached) {
+      if (cached.value && cached.expiresAt > now) {
+        return cached.value;
+      }
+      if (cached.promise) {
+        return cached.promise;
+      }
+    }
+
+    const loadPromise = (async () => {
+      const [entities, total] = await this.repository.findAndCount({
+        order: { id: 'DESC' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      });
+      const items = entities.map((e) => this.toApiTask(e));
+      const result = { items, total, page, perPage };
+      this.cache.set(key, { value: result, expiresAt: Date.now() + this.TTL_MS });
+      return result;
+    })();
+
+    this.cache.set(key, { expiresAt: now + this.TTL_MS, promise: loadPromise });
+    return loadPromise;
   }
 
   // Méthode pour récupérer une tâche spécifique par son ID
@@ -61,8 +91,8 @@ export class TasksService {
     if (!entity) throw new NotFoundException(`Tâche avec l'ID ${id} non trouvée`);
     if (updateTaskDto.name !== undefined) entity.title = updateTaskDto.name;
     if (updateTaskDto.description !== undefined) entity.description = updateTaskDto.description;
-    // Si le DTO avait des champs completed/is_done, nous pourrions les mapper ; le DTO actuel ne les inclut pas
     const saved = await this.repository.save(entity);
+    this.invalidateCache();
     return this.toApiTask(saved);
   }
 
@@ -70,6 +100,11 @@ export class TasksService {
   async remove(id: number): Promise<void> {
     const res = await this.repository.delete(id);
     if (res.affected === 0) throw new NotFoundException(`Tâche avec l'ID ${id} non trouvée`);
+    this.invalidateCache();
+  }
+
+  private invalidateCache() {
+    this.cache.clear();
   }
 
   // Méthode privée pour mapper une entité TaskEntity vers le format ApiTask
